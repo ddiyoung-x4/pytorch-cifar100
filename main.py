@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.cuda.amp.GradScaler
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
@@ -16,6 +17,20 @@ from dataset import Cifar100Dataset
 from utils import get_network, get_optimizer
 
 import wandb
+
+def accuracy(output, target, topk=(1,)):
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(k=maxk, dim=1, largest=True, sorted=True)
+    correct = pred.eq(target.view(target.size(0), -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:, :k].sum()
+        res.append(correct_k)
+
+    return res
 
 def rand_bbox(size, lam):
     W = size[2]
@@ -68,7 +83,7 @@ def train(epoch):
 
     train_loss = train_loss / len(train_loader.dataset)
     print(f'Training Epoch : {epoch} \tLoss: {train_loss:0.4f} ')
-    wandb.log({"train_loss":train_loss})
+    wandb.log({"train_loss":train_loss}, step=epoch)
 
 @torch.no_grad()
 def eval(epoch):
@@ -77,7 +92,8 @@ def eval(epoch):
     model.eval()
 
     test_loss = 0.0
-    correct = 0.0
+    correct_top1 = 0.0
+    correct_top5 = 0.0
 
     for images, labels in test_loader:
         if args.gpu:
@@ -88,19 +104,25 @@ def eval(epoch):
         loss = criterion(outputs, labels)
 
         test_loss += loss.item()
-        _, predicts = outputs.max(1)
-        correct += predicts.eq(labels).sum()
+
+        # top-1, top-5 ACC
+        top1, top5 = accuracy(outputs, labels, topk=(1, 5))
+        correct_top1 += top1
+        correct_top5 += top5
 
     finish = time.time()
-    test_acc = correct.float() / len(test_loader.dataset)
+    test_top1_acc = correct_top1.float() / len(test_loader.dataset)
+    test_top5_acc = correct_top5.float() / len(test_loader.dataset)
     print('Evaluating Network.....')
-    print('Test set: Epoch: {}, Average loss: {:.4f}, Accuracy: {:.4f}, Time consumed:{:.2f}s'.format(
+    print('Test set: Epoch: {}, Average loss: {:.4f}, Top1 Accuracy: {:.4f}, Top5 Accuracy: {:.4f} Time consumed:{:.2f}s'.format(
         epoch,
         test_loss / len(test_loader.dataset),
-        test_acc,
+        test_top1_acc,
+        test_top5_acc,
         finish - start
     ))
-    wandb.log({"test_loss":test_loss/len(test_loader.dataset), "test_acc": test_acc})
+    wandb.log({"test_loss":test_loss/len(test_loader.dataset), "test_top1_acc": test_top1_acc, "test_top5_acc": test_top5_acc}, step=epoch)
+
 
 
 if __name__ == "__main__":
@@ -164,7 +186,10 @@ if __name__ == "__main__":
     optimizer = get_optimizer(args, model)
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, pct_start=0.1, total_steps=args.epochs, steps_per_epoch=len(train_loader), epochs=args.epochs)
 
+
     for epoch in range(args.epochs):
         train(epoch)
         eval(epoch)
         scheduler.step()
+
+    torch.save(model, f'{params}_weights.pth')
