@@ -17,3 +17,17 @@ python main.py --model resnet50 --epochs 200 --batch-size 128 --optim sgd --mome
 (if you use CutMix) --beta 1.0 --cutmix-prob 0.5  
 ```
 You can change the model ResNet 18, 34, 50, 101, 152, and sgd, adam, adamw for Optimizer.
+
+## Training Details  
+#### 1. The training hyper-parameters
+I trained ResNet50 model for 200 epochs and acheived top1 accruacy - 83.21%, top5 accuracy 96.21% of test dataset by using input image size (32x32x3) and ResNet which 1st layer is replaced with 3x3 convolution layer(you can check the code, resnet.py) because of small image size. The customized ResNet50 has 23.7M parameters and 333.6G FLOPS.  
+ 
+#### 2. Experiment results
+|  Dataset  |   Network   | Img size | Params | FLOPS | Top-1 Acc | Top-5 Acc | Epohcs | 
+| :-------: | :-------: | ------- | :-------: | :-------: | :-------: | :-------: | :-------: |
+| cifar100 | resnet50 | 32x32x3 | 23.7M | 333.6G | 83.21 | 96.21 | 200 |
+
+##### eval-top1-acc graph
+
+#### 3. Novel arugment for fast network convergences  
+I argue that the CutMix, AutoAugment data augmentation is the key factor for fast newtork convergence.
