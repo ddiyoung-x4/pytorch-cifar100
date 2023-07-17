@@ -39,4 +39,4 @@ I trained ResNet50 model for 200 epochs and acheived top1 accruacy - 83.21%, top
 <img width="70%" src="https://github.com/ddiyoung-x4/pytorch-cifar100/assets/69739208/5ea2f515-f619-4abe-9c42-ceb1fd3c8ff5"/>  
   
 #### 3. Novel arugment for fast network convergences  
-I argue that the CutMix, AutoAugment are the key factors for fast newtork convergence. In the experiment, only CutMix strategy shows +1.88% accruacy improvement and only AutoAugment shows +{}% accuracy improvement. Using both CutMix and AutoAugment makes the model improve +4.97% accuracy.
+I argue that the CutMix, AutoAugment are the key factors for fast newtork convergence. In the experiment, only CutMix strategy shows +1.88% accruacy improvement and only AutoAugment shows +1.88% accuracy improvement. Using both CutMix and AutoAugment makes the model improve +4.97% accuracy.
