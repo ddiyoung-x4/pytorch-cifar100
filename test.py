@@ -70,10 +70,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default=False, help='use gpu or not')
     args = parser.parse_args()
 
-    # server3
-    # path = '/home/hun/shared/hdd_ext/nvme1/classification/cifar-100-python'
-    # server4
-    path = '/home/hun/shared/hdd_ext/nvme1/Cifar100/cifar-100-python'
+    path = 'your_cifar100_path'
 
     trans = transforms.Compose([
         transforms.ToPILImage(),

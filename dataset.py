@@ -46,7 +46,7 @@ if __name__ == '__main__':
     from torchvision.transforms import ToTensor
     from torch.utils.data import DataLoader
 
-    path = '/home/hun/shared/hdd_ext/nvme1/classification/cifar-100-python'
+    path = 'your_cifar100_path'
     train_dataset = Cifar100Dataset(path, train=True, transform=ToTensor())
     test_dataset = Cifar100Dataset(path, train=False, transform=ToTensor())
 

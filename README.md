@@ -18,6 +18,11 @@ python main.py --model resnet50 --epochs 200 --batch-size 128 --optim sgd --mome
 ```
 You can change the model ResNet 18, 34, 50, 101, 152, and sgd, adam, adamw for Optimizer.
 
+### 3. Test the Model
+```
+python test.py --model resnet50 --weights path_resnet50_weights_file --batch-size 4 --gpu True  
+```
+    
 ## Training Details  
 #### 1. The training hyper-parameters
 I trained ResNet50 model for 200 epochs and acheived top1 accruacy - 83.21%, top5 accuracy 96.21% of test dataset by using input image size (32x32x3) and ResNet which 1st layer is replaced with 3x3 convolution layer(you can check the code, resnet.py) because of small image size. The customized ResNet50 has 23.7M parameters and 333.6G FLOPS.  

@@ -83,7 +83,7 @@ def train(epoch):
 
     train_loss = train_loss / len(train_loader.dataset)
     print(f'Training Epoch : {epoch} \tLoss: {train_loss:0.4f} ')
-    wandb.log({"train_loss":train_loss}, step=epoch)
+    # wandb.log({"train_loss":train_loss}, step=epoch)
 
 @torch.no_grad()
 def eval(epoch):
@@ -121,7 +121,7 @@ def eval(epoch):
         test_top5_acc,
         finish - start
     ))
-    wandb.log({"test_loss":test_loss/len(test_loader.dataset), "test_top1_acc": test_top1_acc, "test_top5_acc": test_top5_acc}, step=epoch)
+    # wandb.log({"test_loss":test_loss/len(test_loader.dataset), "test_top1_acc": test_top1_acc, "test_top5_acc": test_top5_acc}, step=epoch)
 
 
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     params = f"{args.model},batch_size-{args.batch_size},lr-{args.lr},optim-{args.optim},momentum-{args.momentum}"
-    wandb.init(project="cifar100", entity='ddiyoung-x4', name=params, settings=wandb.Settings(_disable_stats=True))
+    # wandb.init(project="cifar100", entity='ddiyoung-x4', name=params, settings=wandb.Settings(_disable_stats=True))
 
     trans = transforms.Compose([
         transforms.ToPILImage(),
@@ -167,10 +167,9 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
     ])
-    # server3
-    path = '/home/hun/shared/hdd_ext/nvme1/classification/cifar-100-python'
-    # server4
-    # path = '/home/hun/shared/hdd_ext/nvme1/Cifar100/cifar-100-python'
+
+    path = 'your_cifar100_path'
+
     train_dataset = Cifar100Dataset(path, train=True, transform=trans)
     test_dataset = Cifar100Dataset(path, train=False, transform=test_trans)
 
