@@ -25,12 +25,12 @@ python test.py --model resnet50 --weights path_resnet50_weights_file --batch-siz
     
 ## Training Details  
 #### 1. The training hyper-parameters
-I trained ResNet50 model for 200 epochs and acheived top1 accruacy - 83.21%, top5 accuracy 96.21% of test dataset by using input image size (32x32x3) and ResNet which 1st layer is replaced with 3x3 convolution layer(you can check the code, resnet.py) because of small image size. The customized ResNet50 has 23.7M parameters and 333.6G FLOPS.  
+I trained ResNet50 model for 200 epochs and acheived top1 accruacy - 83.21%, top5 accuracy 96.21% of test dataset by using input image size (32x32x3) and ResNet which 1st layer is replaced with 3x3 convolution layer(you can check the code, resnet.py) because of small image size. The customized ResNet50 has 23.7M parameters and 199G FLOPS.  
   
 #### 2. Experiment results
 |  Dataset  |   Network   | Img size | Params | FLOPS | Top-1 Acc | Top-5 Acc | Epohcs | 
 | :-------: | :-------: | ------- | :-------: | :-------: | :-------: | :-------: | :-------: |
-| cifar100 | resnet50 | 32x32x3 | 23.7M | 333.6G | 83.21 | 96.21 | 200 |
+| cifar100 | resnet50 | 32x32x3 | 23.7M | 199G | 83.21 | 96.21 | 200 |
 
 ##### eval-top1-acc graph
 <img width="50%" src="https://github.com/ddiyoung-x4/pytorch-cifar100/assets/69739208/d69033c5-8665-430c-8037-9e0fc4b90aea"/>
