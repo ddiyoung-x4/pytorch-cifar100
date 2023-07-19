@@ -1,4 +1,5 @@
 import argparse
+import time
 import os
 
 os.environ["CUDA_DEVICE_ORDER"] ="PCI_BUS_ID"
@@ -29,7 +30,6 @@ def eval(epoch):
     start = time.time()
     model.eval()
 
-    test_loss = 0.0
     correct_top1 = 0.0
     correct_top5 = 0.0
 
@@ -39,9 +39,6 @@ def eval(epoch):
             labels = labels.cuda()
 
         outputs = model(images)
-        loss = criterion(outputs, labels)
-
-        test_loss += loss.item()
 
         # top-1, top-5 ACC
         top1, top5 = accuracy(outputs, labels, topk=(1, 5))
@@ -52,14 +49,11 @@ def eval(epoch):
     test_top1_acc = correct_top1.float() / len(test_loader.dataset)
     test_top5_acc = correct_top5.float() / len(test_loader.dataset)
     print('Evaluating Network.....')
-    print('Test set: Epoch: {}, Average loss: {:.4f}, Top1 Accuracy: {:.4f}, Top5 Accuracy: {:.4f} Time consumed:{:.2f}s'.format(
-        epoch,
-        test_loss / len(test_loader.dataset),
+    print('Test set: Top1 Accuracy: {:.4f}, Top5 Accuracy: {:.4f} Time consumed:{:.2f}s'.format(
         test_top1_acc,
         test_top5_acc,
         finish - start
     ))
-    # wandb.log({"test_loss":test_loss/len(test_loader.dataset), "test_top1_acc": test_top1_acc, "test_top5_acc": test_top5_acc}, step=epoch)
 
 if __name__ == '__main__':
 
