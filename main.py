@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.cuda.amp.GradScaler
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
@@ -17,6 +16,7 @@ from dataset import Cifar100Dataset
 from utils import get_network, get_optimizer
 
 import wandb
+
 
 def accuracy(output, target, topk=(1,)):
     maxk = max(topk)
@@ -50,7 +50,7 @@ def rand_bbox(size, lam):
 
     return bbx1, bby1, bbx2, bby2
 
-def train(epoch):
+def train(epoch, scaler):
     model.train()
 
     train_loss = 0.0
@@ -69,21 +69,23 @@ def train(epoch):
             bbx1, bby1, bbx2, bby2 = rand_bbox(images.size(), lam)
             images[:, :, bbx1:bbx2, bby1:bby2] = images[rand_index, :, bbx1:bbx2, bby1:bby2]
             lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (images.size()[-1] * images.size()[-2]))
-
-            outputs = model(images)
-            loss = criterion(outputs, target_a) * lam + criterion(outputs, target_b) * (1. - lam)
+            with torch.cuda.amp.autocast():
+                outputs = model(images)
+                loss = criterion(outputs, target_a) * lam + criterion(outputs, target_b) * (1. - lam)
         else:
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+            with torch.cuda.amp.autocast():
+                outputs = model(images)
+                loss = criterion(outputs, labels)
         train_loss += loss.item()
 
         optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
 
     train_loss = train_loss / len(train_loader.dataset)
     print(f'Training Epoch : {epoch} \tLoss: {train_loss:0.4f} ')
-    # wandb.log({"train_loss":train_loss}, step=epoch)
+    wandb.log({"train_loss":train_loss}, step=epoch)
 
 @torch.no_grad()
 def eval(epoch):
@@ -121,7 +123,7 @@ def eval(epoch):
         test_top5_acc,
         finish - start
     ))
-    # wandb.log({"test_loss":test_loss/len(test_loader.dataset), "test_top1_acc": test_top1_acc, "test_top5_acc": test_top5_acc}, step=epoch)
+    wandb.log({"test_loss":test_loss/len(test_loader.dataset), "test_top1_acc": test_top1_acc, "test_top5_acc": test_top5_acc}, step=epoch)
 
 
 
@@ -150,9 +152,6 @@ if __name__ == "__main__":
     parser.add_argument('--gpu', default=False, help='use gpu or not')
     args = parser.parse_args()
 
-    params = f"{args.model},batch_size-{args.batch_size},lr-{args.lr},optim-{args.optim},momentum-{args.momentum}"
-    # wandb.init(project="cifar100", entity='ddiyoung-x4', name=params, settings=wandb.Settings(_disable_stats=True))
-
     trans = transforms.Compose([
         transforms.ToPILImage(),
         transforms.RandomHorizontalFlip(),
@@ -167,9 +166,10 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         transforms.Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
     ])
-
-    path = 'your_cifar100_path'
-
+    # server3
+    # path = '/home/hun/shared/hdd_ext/nvme1/classification/cifar-100-python'
+    # server4
+    path = '/home/hun/shared/hdd_ext/nvme1/Cifar100/cifar-100-python'
     train_dataset = Cifar100Dataset(path, train=True, transform=trans)
     test_dataset = Cifar100Dataset(path, train=False, transform=test_trans)
 
@@ -185,9 +185,13 @@ if __name__ == "__main__":
     optimizer = get_optimizer(args, model)
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, pct_start=0.1, total_steps=args.epochs, steps_per_epoch=len(train_loader), epochs=args.epochs)
 
+    params = f"{args.model},batch_size-{args.batch_size},lr-{args.lr},optim-{args.optim},momentum-{args.momentum},cutmixProb-{args.cutmix_prob}"
+    wandb.init(project="cifar100", entity='ddiyoung-x4', name=params, settings=wandb.Settings(_disable_stats=True))
+
+    scaler = torch.cuda.amp.GradScaler()
 
     for epoch in range(args.epochs):
-        train(epoch)
+        train(epoch, scaler)
         eval(epoch)
         scheduler.step()
 
